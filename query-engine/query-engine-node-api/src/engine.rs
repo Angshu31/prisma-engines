@@ -180,14 +180,19 @@ impl QueryEngine {
     }
 
     fn logger(&self) -> CallbackLogger {
+         // is a sql query?
+         let is_sql_query = filter_fn(|meta| {
+            meta.target() == "quaint::connector::metrics" 
+                && meta.fields().iter().any(|f| f.name() == "query")
+        });
+        // is a mongodb query?
+        let is_mongo_query = filter_fn(|meta| {
+            meta.target() == "mongodb_query_connector::query"
+        });
         // We need to filter the messages to send to our callback logging mechanism
         let filters = if self.log_queries {
             // Filter trace query events (for query log) or based in the defined log level
-            filter_fn(|meta| {
-                meta.target() == "quaint::connector::metrics" && meta.fields().iter().any(|f| f.name() == "query")
-            })
-            .or(self.log_level)
-            .boxed()
+            is_sql_query.or(is_mongo_query).or(self.log_level).boxed()
         } else {
             // Filter based in the defined log level
             self.log_level.boxed()
