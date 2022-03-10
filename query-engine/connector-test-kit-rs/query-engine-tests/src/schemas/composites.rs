@@ -102,6 +102,7 @@ pub fn to_many_composites() -> String {
         type CompositeA {
             a_1 String @default("a_1 default") @map("a1")
             a_2 Int?
+            to_one_b CompositeB?
         }
 
         type CompositeB {
